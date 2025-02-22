@@ -49,7 +49,7 @@ export default function App() {
             ))
           ) : (
             <div className="empty-category">
-              <p>No items in this category</p>
+              <p className="empty-category-text">No items in this category</p>
             </div>
           )}
         </div>
