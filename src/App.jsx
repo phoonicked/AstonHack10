@@ -8,11 +8,28 @@ import Profile from "./Profile";
 import Dashboard from "./Dashboard";
 import "./App.css";
 
-const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
+const fetchCollections = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, "Collections")); // Replace with the actual collection name
+    const dbCategories = snapshot.docs.map(doc => doc.id); // Extracts document IDs
+
+    console.log("Fetched Collections:", dbCategories);
+    return dbCategories;
+  } catch (error) {
+    console.error("Error fetching collections:", error);
+    return [];
+  }
+};
+
+// Call this function where needed (e.g., inside a React component)
+fetchCollections().then(dbCategories => {
+  console.log("Collections Array:", dbCategories);
+});
 
 export default function App() {
-  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]);
+
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("long_sleeve_top");
   const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -142,6 +159,8 @@ export default function App() {
       let allItems = [];
       let allCategories = [];
 
+      const dbCategories = await fetchCollections();
+
       for (const collectionName of dbCategories) {
         try {
           const querySnapshot = await getDocs(collection(db, collectionName));
@@ -171,6 +190,12 @@ export default function App() {
     };
 
     fetchAllCollections();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      setCategories(await fetchCollections());
+    })();
   }, []);
 
   return (
