@@ -220,8 +220,8 @@ export default function App() {
 
             <div className="bottom-navbar">
               <button className="nav-btn"><AiOutlineHome size={30} /></button>
-              <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
               <button className="nav-btn"><AiOutlineMessage size={30} /></button>
+              <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
               <Link to="/dashboard" className="nav-btn"><AiOutlineBarChart size={30} /></Link>
               <Link to="/profile" className="nav-btn"><AiOutlineUser size={30} /></Link>
             </div>
