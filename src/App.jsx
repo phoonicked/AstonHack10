@@ -197,7 +197,7 @@ export default function App() {
             </div>
 
             {/* Take Photo Button */}
-            <button className="take-photo-btn" onClick={handleTakePhoto}>
+            <button className="take-photo-btn" onClick={handleOpenCamera}>
               <AiOutlineCamera className="camera-icon" /> Take a Photo
             </button>
           </div>
