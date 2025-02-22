@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import { collection, getDocs } from "firebase/firestore";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AiOutlineHome, AiOutlinePlus, AiOutlineUser, AiOutlineMessage, AiOutlineCloudUpload, AiOutlineCamera } from "react-icons/ai";
@@ -24,41 +23,77 @@ export default function App() {
   const canvasRef = useRef(null);
 
   const handleOpenCamera = async () => {
-    try{
+    console.log("Attempting to open camera...");
+  
+    try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setVideoStream(stream);
-      }
+      // console.log("Camera stream accessed successfully", stream);
+  
       setShowCameraPopup(true);
-    } catch (error){
-      alert('Error accessing camera: ' + error.message);
+  
+      // Ensure the video element updates properly
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current.play().catch(error => console.error("Error playing video:", error));
+          };
+          // console.log("Video stream set to videoRef and playing.");
+        }
+        setVideoStream(stream);
+      }, 200); // Small delay to ensure popup is fully mounted
+  
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      alert("Error accessing camera: " + error.message);
     }
-  };
-
+  };  
+  
   const handleTakePhoto = () => {
-    if (videoRef.current && canvasRef.current) return;
-
+    // ("Attempting to capture a photo...");
+  
+    if (!videoRef.current || !canvasRef.current) {
+      console.warn("Video or Canvas element not found!");
+      return;
+    }
+  
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
     context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
+    // console.log("Photo captured and drawn onto canvas.");
+  
     canvas.toBlob(async (blob) => {
-      if(!blob) return;
-
-      const imageRef = ref(storage, 'images/' + Date.now() + '.jpg');
-      await uploadBytes(imageRef, blob);
-
-      const imageUrl = await getDownloadURL(imageRef);
-      await addDoc(collection(db, "shirts"), {image: imageUrl});
-
-      if(videoStream) {
-        videoStream.getTracks().forEach((track) => track.stop());
-        setVideoStream(null);
+      if (!blob) {
+        console.warn("Failed to capture photo as blob.");
+        return;
       }
-      alert ('Photo uploaded successfully');
-      setShowCameraPopup(false);
-    }, 'image/jpeg');
+  
+      // console.log("Uploading photo...");
+      const imageRef = ref(storage, "images/" + Date.now() + ".jpg");
+  
+      try {
+        await uploadBytes(imageRef, blob);
+        // console.log("Photo uploaded to Firebase Storage.");
+  
+        const imageUrl = await getDownloadURL(imageRef);
+        // console.log("Download URL received:", imageUrl);
+  
+        await addDoc(collection(db, "shirts"), { image: imageUrl });
+        // console.log("Photo URL saved to Firestore database.");
+  
+        if (videoStream) {
+          // console.log("Stopping camera stream...");
+          videoStream.getTracks().forEach((track) => track.stop());
+          setVideoStream(null);
+        }
+  
+        alert("Photo uploaded successfully");
+        setShowCameraPopup(false);
+        // console.log("Camera popup closed.");
+      } catch (error) {
+        console.error("Error uploading photo:", error);
+      }
+    }, "image/jpeg");
   };
 
   const handleUploadPhoto = () => {
@@ -213,15 +248,15 @@ export default function App() {
     
           {/* Camera Popup */}
           {showCameraPopup && (
-            <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
-              <div className="camera-popup">
-                <video ref={videoRef} className="camera-preview" autoPlay></video>
-                <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
-                <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
-                <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
-              </div>
-            </div>
-          )}
+  <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
+    <div className="camera-popup">
+      <video ref={videoRef} className="camera-preview" autoPlay playsInline></video>
+      <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
+      <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
+      <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
+    </div>
+  </div>
+)}
         </div>
         } />
          {/* Profile Page Route */}
