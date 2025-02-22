@@ -1,16 +1,49 @@
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { AiFillHome, AiOutlinePlus, AiOutlineUser } from "react-icons/ai";
+import { AiFillHome, AiOutlinePlus, AiOutlineUser, AiOutlineCloudUpload, AiOutlineCamera } from "react-icons/ai";
 import { db } from "./lib/firebase";
 import "./App.css";
 
 const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
 
 export default function App() {
-  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]); // Default category
+  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploadClosing, setIsUploadClosing] = useState(false);
+
+  const closePopup = () => {
+    setIsUploadClosing(true);
+    setTimeout(() => {
+      setShowPopup(false);
+      setIsUploadClosing(false);
+    }, 300); // Match animation duration
+  };
+
+  const handleDragStart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  
+    const files = e.dataTransfer.files;
+    if (files.length) {
+      console.log("Files dropped:", files);
+    }
+  };
 
   const handleTakePhoto = () => {
     const videoElement = document.createElement('video');
@@ -31,7 +64,6 @@ export default function App() {
     fileInput.click();
   };
 
-
   useEffect(() => {
     const fetchAllCollections = async () => {
       let allItems = [];
@@ -43,7 +75,7 @@ export default function App() {
 
           const collectionItems = querySnapshot.docs.map((doc) => ({
             id: doc.id,
-            category: collectionName, // Use collection name as category
+            category: collectionName,
             name: doc.data().name || "Unnamed Item",
             description: doc.data().description || "No description available",
             colour: doc.data().colour || "Unknown",
@@ -62,7 +94,7 @@ export default function App() {
 
       setItems(allItems);
       setCategories(allCategories);
-      setSelectedCategory(allCategories[0] || ""); // Set default category safely
+      setSelectedCategory(allCategories[0] || "");
     };
 
     fetchAllCollections();
@@ -117,12 +149,24 @@ export default function App() {
       </div>
 
       {showPopup && (
-        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Add a Photo</h2>
-            <button className="popup-btn" onClick={handleTakePhoto}>Take a Photo</button>
-            <button className="popup-btn" onClick={handleUploadPhoto}>Upload a Photo</button>
-            <button className="close-btn" onClick={() => setShowPopup(false)}>Close</button>
+        <div className={`popup-overlay ${isUploadClosing ? "closing" : ""}`} onClick={closePopup}>
+          <div className={`popup-content ${isUploadClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
+            <div
+              className={`upload-box ${isDragging ? "dragging" : ""}`}
+              onDragEnter={handleDragStart}
+              onDragOver={handleDragStart}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <AiOutlineCloudUpload className="upload-icon" />
+              <p className="upload-text">Drag & drop your files here or</p>
+              <button className="upload-btn">Choose files</button>
+            </div>
+
+            {/* Take Photo Button */}
+            <button className="take-photo-btn" onClick={handleTakePhoto}>
+              <AiOutlineCamera className="camera-icon" /> Take a Photo
+            </button>
           </div>
         </div>
       )}
