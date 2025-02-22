@@ -249,7 +249,7 @@ h3 {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.4); /* Dark grey transparent background */
+  background: rgba(0, 0, 0, 0.8); /* Dark grey transparent background */
   display: flex;
   justify-content: center;
   align-items: center;

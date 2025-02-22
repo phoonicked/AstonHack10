@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { AiFillHome, AiOutlinePlus, AiOutlineUser, AiOutlineCloudUpload, AiOutlineCamera } from "react-icons/ai";
+import { AiOutlineHome, AiOutlinePlus, AiOutlineUser, AiOutlineCloudUpload, AiOutlineCamera, AiOutlineMessage } from "react-icons/ai";
 import { db } from "./lib/firebase";
 import "./App.css";
 
@@ -143,8 +143,9 @@ export default function App() {
       </div>
 
       <div className="bottom-navbar">
-        <button className="nav-btn"><AiFillHome size={30} /></button>
+        <button className="nav-btn"><AiOutlineHome size={30} /></button>
         <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
+        <button className="nav-btn"><AiOutlineMessage size={30} /></button>
         <button className="nav-btn"><AiOutlineUser size={30} /></button>
       </div>
 
