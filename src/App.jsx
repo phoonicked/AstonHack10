@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { useState, useRef, useEffect } from "react";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AiFillHome, AiOutlinePlus, AiOutlineUser } from "react-icons/ai";
-import { db } from "./lib/firebase";
+import { db, storage } from "./lib/firebase";
 import "./App.css";
 
 const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
@@ -11,26 +12,56 @@ export default function App() {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
+  const [showCameraPopup, setShowCameraPopup] = useState(false);
+  const [videoStream, setVideoStream] = useState(null);
 
-  const handleTakePhoto = () => {
-    const videoElement = document.createElement('video');
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then((stream) => {
-        videoElement.srcObject = stream;
-        videoElement.play();
-      })
-      .catch((error) => {
-        alert('Error accessing camera: ' + error.message);
-      });
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  // Open camera popup
+  const handleOpenCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setVideoStream(stream);
+      }
+      setShowCameraPopup(true);
+    } catch (error) {
+      alert("Error accessing camera: " + error.message);
+    }
   };
 
-  const handleUploadPhoto = () => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'image/*';
-    fileInput.click();
-  };
+  // Capture and upload image
+  const handleCapturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
 
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+
+    // Convert canvas to Blob
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+
+      // Upload to Firebase Storage
+      const imageRef = ref(storage, `captured_images/${Date.now()}.jpg`);
+      await uploadBytes(imageRef, blob);
+
+      // Get URL and store in Firestore
+      const imageUrl = await getDownloadURL(imageRef);
+      await addDoc(collection(db, "clothing"), { image: imageUrl });
+
+      // Stop video stream
+      if (videoStream) {
+        videoStream.getTracks().forEach((track) => track.stop());
+        setVideoStream(null);
+      }
+
+      alert("Photo saved successfully!");
+      setShowCameraPopup(false);
+    }, "image/jpeg");
+  };
 
   useEffect(() => {
     const fetchAllCollections = async () => {
@@ -43,7 +74,7 @@ export default function App() {
 
           const collectionItems = querySnapshot.docs.map((doc) => ({
             id: doc.id,
-            category: collectionName, // Use collection name as category
+            category: collectionName,
             name: doc.data().name || "Unnamed Item",
             description: doc.data().description || "No description available",
             colour: doc.data().colour || "Unknown",
@@ -68,8 +99,6 @@ export default function App() {
     fetchAllCollections();
   }, []);
 
-  const filteredItems = items.filter((item) => item.category === selectedCategory);
-
   return (
     <div className="wardrobe-container">
       <header className="wardrobe-header">My Wardrobe</header>
@@ -87,21 +116,23 @@ export default function App() {
           ))}
         </div>
 
-        {filteredItems.length > 0 ? (
+        {items.length > 0 ? (
           <div className="item-grid">
-            {filteredItems.map((item) => (
-              <div key={item.id} className="item-card">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="item-image" />
-                ) : (
-                  <div className="placeholder">No Image</div>
-                )}
-                <div className="item-info">
-                  <h3>{item.name}</h3>
-                  <p>{item.description}</p>
+            {items
+              .filter((item) => item.category === selectedCategory)
+              .map((item) => (
+                <div key={item.id} className="item-card">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="item-image" />
+                  ) : (
+                    <div className="placeholder">No Image</div>
+                  )}
+                  <div className="item-info">
+                    <h3>{item.name}</h3>
+                    <p>{item.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
           <div className="empty-category">
@@ -120,9 +151,20 @@ export default function App() {
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-content" onClick={(e) => e.stopPropagation()}>
             <h2>Add a Photo</h2>
-            <button className="popup-btn" onClick={handleTakePhoto}>Take a Photo</button>
-            <button className="popup-btn" onClick={handleUploadPhoto}>Upload a Photo</button>
+            <button className="popup-btn" onClick={handleOpenCamera}>Take a Photo</button>
             <button className="close-btn" onClick={() => setShowPopup(false)}>Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Popup */}
+      {showCameraPopup && (
+        <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
+          <div className="camera-popup">
+            <video ref={videoRef} className="camera-preview" autoPlay></video>
+            <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
+            <button className="popup-btn" onClick={handleCapturePhoto}>Capture Photo</button>
+            <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
           </div>
         </div>
       )}
