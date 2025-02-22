@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AiOutlineHome, AiOutlinePlus, AiOutlineUser, AiOutlineMessage, AiOutlineCloudUpload, AiOutlineCamera } from "react-icons/ai";
 import { db, storage } from "./lib/firebase";
 import "./App.css";
@@ -206,14 +207,13 @@ export default function App() {
 
       {/* Camera Popup */}
       {showCameraPopup && (
-        <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
-          <div className="camera-popup">
-            <video ref={videoRef} className="camera-preview" autoPlay></video>
-            <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
-            <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
-            <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
-          </div>
+        <div className="popup-overlay">
+        <div className="camera-popup" onClick={(e) => e.stopPropagation()}>
+          <video ref={videoRef} className="camera-preview" autoPlay></video>
+          <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
+          <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
         </div>
+      </div>
       )}
     </div>
   );
