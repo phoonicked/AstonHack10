@@ -1,23 +1,15 @@
-import { useState } from 'react';
-import { AiFillHome, AiOutlinePlus, AiOutlineUser } from 'react-icons/ai';
-import './App.css';
+import { useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { AiFillHome, AiOutlinePlus, AiOutlineUser } from "react-icons/ai";
+import { db } from "./lib/firebase";
+import "./App.css";
 
-const categories = ['Shirt', 'Hoodie', 'Jeans', 'Jacket', 'Polo', 'Sweatshirt'];
-const items = [
-  { id: 1, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 2, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 3, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 4, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 5, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 6, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
-  { id: 7, category: 'Jeans', image: '' },
-  { id: 8, category: 'Sweatshirt', image: '' },
-  { id: 9, category: 'Polo', image: '' },
-  { id: 10, category: 'Sweatshirt', image: '' },
-];
+const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
 
 export default function App() {
-  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]); // Default category
+  const [categories, setCategories] = useState([]);
+  const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
 
   const handleTakePhoto = () => {
@@ -38,41 +30,86 @@ export default function App() {
     fileInput.accept = 'image/*';
     fileInput.click();
   };
+
+
+  useEffect(() => {
+    const fetchAllCollections = async () => {
+      let allItems = [];
+      let allCategories = [];
+
+      for (const collectionName of dbCategories) {
+        try {
+          const querySnapshot = await getDocs(collection(db, collectionName));
+
+          const collectionItems = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            category: collectionName, // Use collection name as category
+            name: doc.data().name || "Unnamed Item",
+            description: doc.data().description || "No description available",
+            colour: doc.data().colour || "Unknown",
+            image: doc.data().image || "",
+          }));
+
+          if (collectionItems.length > 0) {
+            allCategories.push(collectionName);
+          }
+
+          allItems = [...allItems, ...collectionItems];
+        } catch (error) {
+          console.error(`Error fetching collection ${collectionName}:`, error);
+        }
+      }
+
+      setItems(allItems);
+      setCategories(allCategories);
+      setSelectedCategory(allCategories[0] || ""); // Set default category safely
+    };
+
+    fetchAllCollections();
+  }, []);
+
   const filteredItems = items.filter((item) => item.category === selectedCategory);
 
   return (
     <div className="wardrobe-container">
       <header className="wardrobe-header">My Wardrobe</header>
+
       <div className="main-content">
         <div className="category-buttons">
           {categories.map((category) => (
             <button
               key={category}
-              className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+              className={`category-btn ${selectedCategory === category ? "active" : ""}`}
               onClick={() => setSelectedCategory(category)}
             >
-              {category}
+              {category.charAt(0).toUpperCase() + category.slice(1)}
             </button>
           ))}
         </div>
-        <div className="item-grid">
-          {filteredItems.length > 0 ? (
-            filteredItems.map((item) => (
+
+        {filteredItems.length > 0 ? (
+          <div className="item-grid">
+            {filteredItems.map((item) => (
               <div key={item.id} className="item-card">
                 {item.image ? (
-                  <img src={item.image} alt={item.category} className="item-image" />
+                  <img src={item.image} alt={item.name} className="item-image" />
                 ) : (
                   <div className="placeholder">No Image</div>
                 )}
+                <div className="item-info">
+                  <h3>{item.name}</h3>
+                  <p>{item.description}</p>
+                </div>
               </div>
-            ))
-          ) : (
-            <div className="empty-category">
-              <p className="empty-category-text">No items in this category</p>
-            </div>
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-category">
+            <p>No items in this category</p>
+          </div>
+        )}
       </div>
+
       <div className="bottom-navbar">
         <button className="nav-btn"><AiFillHome size={30} /></button>
         <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
