@@ -51,48 +51,49 @@ export default function App() {
   };
 
   const handleTakePhoto = () => {
-    // ("Attempting to capture a photo...");
-
+    console.log("Capturing photo...");
+  
     if (!videoRef.current || !canvasRef.current) {
       console.warn("Video or Canvas element not found!");
       return;
     }
-
+  
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-    // console.log("Photo captured and drawn onto canvas.");
-
+    console.log("Photo captured and drawn onto canvas.");
+  
     canvas.toBlob(async (blob) => {
       if (!blob) {
         console.warn("Failed to capture photo as blob.");
         return;
       }
-
-      // console.log("Uploading photo...");
-      const imageRef = ref(storage, "images/" + Date.now() + ".jpg");
-
+  
+      console.log("Uploading photo to imgBB...");
+  
+      const formData = new FormData();
+      formData.append("image", blob);
+  
       try {
-        await uploadBytes(imageRef, blob);
-        // console.log("Photo uploaded to Firebase Storage.");
-
-        const imageUrl = await getDownloadURL(imageRef);
-        // console.log("Download URL received:", imageUrl);
-
-        await addDoc(collection(db, "shirts"), { image: imageUrl });
-        // console.log("Photo URL saved to Firestore database.");
-
-        if (videoStream) {
-          // console.log("Stopping camera stream...");
-          videoStream.getTracks().forEach((track) => track.stop());
-          setVideoStream(null);
+        const response = await fetch("https://api.imgbb.com/1/upload?key=adf49cd5eb7ee8c50f38ebb785fc49d4", {
+          method: "POST",
+          body: formData,
+        });
+  
+        const data = await response.json();
+        if (data.success) {
+          const imageUrl = data.data.url;
+          console.log("Image URL:", imageUrl);
+  
+          await addDoc(collection(db, "shirts"), { image: imageUrl });
+          console.log("Photo URL saved to Firestore database.");
+  
+          alert("Photo uploaded successfully!");
+        } else {
+          console.error("Error uploading to imgBB:", data);
         }
-
-        alert("Photo uploaded successfully");
-        setShowCameraPopup(false);
-        // console.log("Camera popup closed.");
       } catch (error) {
-        console.error("Error uploading photo:", error);
+        console.error("Error:", error);
       }
     }, "image/jpeg");
   };
