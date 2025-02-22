@@ -1,42 +1,96 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+
+@font-face {
+  font-family: 'HorizonFont';
+  src: url('/src/assets/horizon.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* General Container */
+.wardrobe-container, body, html {
+  height: 100vh;
+  width: 100vw;
+  background: #f8f8f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'HorizonFont', sans-serif;
+}
+
+/* Header */
+.wardrobe-header {
+  width: 100%;
+  padding: 20px;
+  font-size: 30px;
+  font-weight: bold;
+  background: linear-gradient(to right, #933ddd, #ffffff);
   text-align: center;
+  color: black;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* Category Buttons */
+.category-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 16px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.category-btn {
+  padding: 10px 16px;
+  border: 1px solid black;
+  border-radius: 20px;
+  background: white;
+  color: black;
+  cursor: pointer;
+  transition: 0.3s;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.category-btn.active {
+  background: black;
+  color: white;
 }
 
-.card {
-  padding: 2em;
+/* Grid Layout */
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 16px;
 }
 
-.read-the-docs {
-  color: #888;
+/* Item Card */
+.item-card {
+  background: white;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Image Styling */
+.item-image {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* .bottom-navbar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 16px;
+  background: white;
+  box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+} */
+
+.bottom-navbar {
+  padding: 10px 16px;
+  border: 1px solid black;
+  border-radius: 20px;
+  background: white;
+  color: black;
+  cursor: pointer;
+  transition: 0.3s;
 }

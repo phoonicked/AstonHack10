@@ -1,35 +1,45 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const categories = ['Shirt', 'Hoodie', 'Jeans', 'Jacket', 'Polo', 'Sweatshirt'];
+const items = [
+  { id: 1, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
+  { id: 2, category: 'Shirt', image: 'https://raven.contrado.app/resources/images/2020-10/155441/personalised-photo-tshirt1527448_l.jpeg?w=1200&h=1200&q=80&auto=format&fit=crop' },
+  { id: 3, category: 'Jeans', image: '' },
+  { id: 4, category: 'Sweatshirt', image: '' },
+  { id: 5, category: 'Polo', image: '' },
+  { id: 6, category: 'Sweatshirt', image: '' },
+];
+
+export default function App() {
+  const [selectedCategory, setSelectedCategory] = useState(categories[0]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="wardrobe-container">
+      <header className="wardrobe-header">My Wardrobe</header>
+      <div className="category-buttons">
+        {categories.map((category) => (
+          <button
+            key={category}
+            className={`category-btn ${selectedCategory === category ? 'active' : ''}`}
+            onClick={() => setSelectedCategory(category)}
+          >
+            {category}
+          </button>
+        ))}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
+      <div className="item-grid">
+        {items
+          .filter((item) => item.category === selectedCategory)
+          .map((item) => (
+            <div key={item.id} className="item-card">
+              <img src={item.image} alt={item.category} className="item-image" />
+            </div>
+          ))}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+      <div className="bottom-navbar">
+        <button className="add-item-btn">Add Item</button>
+      </div>
+    </div>
+  );
 }
-
-export default App
