@@ -1,6 +1,6 @@
 import React from "react";
 import { AiOutlineHeart, AiOutlineSetting, AiOutlineLogout, AiOutlineGift, AiOutlineUser, AiOutlineMessage } from "react-icons/ai";
-import "./ProfilePage.css";
+import "./Profile.css";
 
 export default function ProfilePage() {
   return (

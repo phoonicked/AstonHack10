@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+import { collection, getDocs } from "firebase/firestore";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { AiOutlineHome, AiOutlinePlus, AiOutlineUser, AiOutlineMessage, AiOutlineCloudUpload, AiOutlineCamera } from "react-icons/ai";
 import { db, storage } from "./lib/firebase";
+import Profile from "./Profile";
 import "./App.css";
 
 const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
@@ -134,87 +137,96 @@ export default function App() {
   }, []);
 
   return (
-    <div className="wardrobe-container">
-      <header className="wardrobe-header">My Wardrobe</header>
-
-      <div className="main-content">
-        <div className="category-buttons">
-          {categories.map((category) => (
-            <button
-              key={category}
-              className={`category-btn ${selectedCategory === category ? "active" : ""}`}
-              onClick={() => setSelectedCategory(category)}
-            >
-              {category.charAt(0).toUpperCase() + category.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        {items.length > 0 ? (
-          <div className="item-grid">
-            {items
-              .filter((item) => item.category === selectedCategory)
-              .map((item) => (
-                <div key={item.id} className="item-card">
-                  {item.image ? (
-                    <img src={item.image} alt={item.name} className="item-image" />
-                  ) : (
-                    <div className="placeholder">No Image</div>
-                  )}
-                  <div className="item-info">
-                    <h3>{item.name}</h3>
-                    <p>{item.description}</p>
-                  </div>
-                </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={
+          <div className="wardrobe-container">
+          <header className="wardrobe-header">My Wardrobe</header>
+    
+          <div className="main-content">
+            <div className="category-buttons">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  className={`category-btn ${selectedCategory === category ? "active" : ""}`}
+                  onClick={() => setSelectedCategory(category)}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
               ))}
-          </div>
-        ) : (
-          <div className="empty-category">
-            <p>No items in this category</p>
-          </div>
-        )}
-      </div>
-
-      <div className="bottom-navbar">
-        <button className="nav-btn"><AiOutlineHome size={30} /></button>
-        <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
-        <button className="nav-btn"><AiOutlineMessage size={30} /></button>
-        <button className="nav-btn"><AiOutlineUser size={30} /></button>
-      </div>
-
-      {showPopup && (
-        <div className={`popup-overlay ${isUploadClosing ? "closing" : ""}`} onClick={closePopup}>
-          <div className={`popup-content ${isUploadClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
-            <div
-              className={`upload-box ${isDragging ? "dragging" : ""}`}
-              onDragEnter={handleDragStart}
-              onDragOver={handleDragStart}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <AiOutlineCloudUpload className="upload-icon" />
-              <p className="upload-text">Drag & drop your files here or</p>
-              <button className="upload-btn">Choose files</button>
             </div>
-
-            {/* Take Photo Button */}
-            <button className="take-photo-btn" onClick={handleOpenCamera}>
-              <AiOutlineCamera className="camera-icon" /> Take a Photo
-            </button>
+    
+            {items.length > 0 ? (
+              <div className="item-grid">
+                {items
+                  .filter((item) => item.category === selectedCategory)
+                  .map((item) => (
+                    <div key={item.id} className="item-card">
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="item-image" />
+                      ) : (
+                        <div className="placeholder">No Image</div>
+                      )}
+                      <div className="item-info">
+                        <h3>{item.name}</h3>
+                        <p>{item.description}</p>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="empty-category">
+                <p>No items in this category</p>
+              </div>
+            )}
           </div>
+    
+          <div className="bottom-navbar">
+            <button className="nav-btn"><AiOutlineHome size={30} /></button>
+            <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
+            <button className="nav-btn"><AiOutlineMessage size={30} /></button>
+            <Link to="/profile" className="nav-btn"><AiOutlineUser size={30} /></Link>
+          </div>
+    
+          {showPopup && (
+            <div className={`popup-overlay ${isUploadClosing ? "closing" : ""}`} onClick={closePopup}>
+              <div className={`popup-content ${isUploadClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
+                <div
+                  className={`upload-box ${isDragging ? "dragging" : ""}`}
+                  onDragEnter={handleDragStart}
+                  onDragOver={handleDragStart}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <AiOutlineCloudUpload className="upload-icon" />
+                  <p className="upload-text">Drag & drop your files here or</p>
+                  <button className="upload-btn">Choose files</button>
+                </div>
+    
+                {/* Take Photo Button */}
+                <button className="take-photo-btn" onClick={handleOpenCamera}>
+                  <AiOutlineCamera className="camera-icon" /> Take a Photo
+                </button>
+              </div>
+            </div>
+          )}
+    
+          {/* Camera Popup */}
+          {showCameraPopup && (
+            <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
+              <div className="camera-popup">
+                <video ref={videoRef} className="camera-preview" autoPlay></video>
+                <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
+                <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
+                <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Camera Popup */}
-      {showCameraPopup && (
-        <div className="popup-overlay">
-        <div className="camera-popup" onClick={(e) => e.stopPropagation()}>
-          <video ref={videoRef} className="camera-preview" autoPlay></video>
-          <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
-          <button className="popup-btn" onClick={handleTakePhoto}>Capture Photo</button>
-        </div>
-      </div>
-      )}
-    </div>
+        } />
+         {/* Profile Page Route */}
+         <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Router>
   );
 }
