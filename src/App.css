@@ -52,7 +52,7 @@
 /* Category Buttons */
 .category-buttons {
   display: flex;
-  gap: 10px;
+  gap: 20px;
   padding: 16px;
   justify-content: center;
   flex-wrap: wrap;
@@ -83,39 +83,17 @@
   transform: scale(1.1);
 }
 
-/* Grid Layout */
+/* Grid Layout
 .item-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   padding: 16px;
-}
-
-/* Item Card */
-.item-card {
-  background: white;
-  padding: 16px;
-  border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
-}
+} */
 
 .item-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-/* Image Styling */
-.item-image {
-  width: 100%;
-  height: 240px;
-  object-fit: cover;
-  border-radius: 6px;
-  transition: transform 0.3s ease-in-out;
-}
-
-.item-image:hover {
-  transform: scale(1.05);
 }
 
 /* Bottom Navbar */
@@ -252,4 +230,82 @@ h3 {
   text-align: center;
   font-size: 20px;
   margin-top: 20px;
+}
+
+/* Ensure the item grid layout stays uniform */
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Prevents large gaps */
+  gap: 10px; /* Reduces spacing between items */
+  padding: 20px;
+  width: 100%;
+  max-width: 1200px; /* Ensures grid doesn't stretch too much */
+  margin: 0 auto; /* Centers grid in the page */
+} 
+
+/* Make the item-card have a futuristic glassmorphic design */
+.item-card {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  width: 200px;
+  height: 290px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+/* Hover effect for interaction */
+.item-card:hover {
+  transform: translateY(-5px) scale(1.05);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Image container to ensure uniformity */
+.item-image-container {
+  width: 180px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to top, #222 10%, #444 90%);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Fix image size & prevent tiny images from being too small */
+.item-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Item Info */
+.item-info {
+  font-size: 14px;
+  color: #333;
+  width: 100%;
+  text-align: center;
+  font-family: 'HorizonFont', sans-serif;
+}
+
+/* Name Style */
+.item-info h3 {
+  font-size: 18px;
+  font-weight: bold;
+  color: #010b15;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+/* Colour Information */
+.item-info p {
+  font-size: 14px;
+  font-weight: bold;
+  color: #c084fc; /* Neon purple */
+  text-transform: uppercase;
 }
