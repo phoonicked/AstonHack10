@@ -1,67 +1,36 @@
-import { useState, useRef, useEffect } from "react";
-import { collection, addDoc, getDocs } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { useState, useEffect } from "react";
+import { collection, getDocs } from "firebase/firestore";
 import { AiFillHome, AiOutlinePlus, AiOutlineUser } from "react-icons/ai";
-import { db, storage } from "./lib/firebase";
+import { db } from "./lib/firebase";
 import "./App.css";
 
 const dbCategories = ["shirts", "pants", "hoodies", "jackets", "polos", "sweatshirts"];
 
 export default function App() {
-  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]); // Default category
+  const [selectedCategory, setSelectedCategory] = useState(dbCategories[0]);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
-  const [showCameraPopup, setShowCameraPopup] = useState(false);
-  const [videoStream, setVideoStream] = useState(null);
 
-  const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  // Open camera popup
-  const handleOpenCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setVideoStream(stream);
-      }
-      setShowCameraPopup(true);
-    } catch (error) {
-      alert("Error accessing camera: " + error.message);
-    }
+  const handleTakePhoto = () => {
+    const videoElement = document.createElement('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        videoElement.srcObject = stream;
+        videoElement.play();
+      })
+      .catch((error) => {
+        alert('Error accessing camera: ' + error.message);
+      });
   };
 
-  // Capture and upload image
-  const handleCapturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    context.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-
-    // Convert canvas to Blob
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-
-      // Upload to Firebase Storage
-      const imageRef = ref(storage, `captured_images/${Date.now()}.jpg`);
-      await uploadBytes(imageRef, blob);
-
-      // Get URL and store in Firestore
-      const imageUrl = await getDownloadURL(imageRef);
-      await addDoc(collection(db, "clothing"), { image: imageUrl });
-
-      // Stop video stream
-      if (videoStream) {
-        videoStream.getTracks().forEach((track) => track.stop());
-        setVideoStream(null);
-      }
-
-      alert("Photo saved successfully!");
-      setShowCameraPopup(false);
-    }, "image/jpeg");
+  const handleUploadPhoto = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.click();
   };
+
 
   useEffect(() => {
     const fetchAllCollections = async () => {
@@ -93,7 +62,7 @@ export default function App() {
 
       setItems(allItems);
       setCategories(allCategories);
-      setSelectedCategory(allCategories[0] || ""); // Set default category safely
+      setSelectedCategory(allCategories[0] || "");
     };
 
     fetchAllCollections();
@@ -142,8 +111,9 @@ export default function App() {
       </div>
 
       <div className="bottom-navbar">
-        <button className="nav-btn"><AiFillHome size={30} /></button>
+        <button className="nav-btn"><AiOutlineHome size={30} /></button>
         <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
+        <button className="nav-btn"><AiOutlineMessage size={30} /></button>
         <button className="nav-btn"><AiOutlineUser size={30} /></button>
       </div>
 
@@ -151,7 +121,8 @@ export default function App() {
         <div className="popup-overlay" onClick={() => setShowPopup(false)}>
           <div className="popup-content" onClick={(e) => e.stopPropagation()}>
             <h2>Add a Photo</h2>
-            <button className="popup-btn" onClick={handleOpenCamera}>Take a Photo</button>
+            <button className="popup-btn" onClick={handleTakePhoto}>Take a Photo</button>
+            <button className="popup-btn" onClick={handleUploadPhoto}>Upload a Photo</button>
             <button className="close-btn" onClick={() => setShowPopup(false)}>Close</button>
           </div>
         </div>
