@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { AiOutlineHome, AiOutlinePlus, AiOutlineUser, AiOutlineCloudUpload, AiOutlineCamera, AiOutlineMessage } from "react-icons/ai";
+import { AiFillHome, AiOutlinePlus, AiOutlineUser } from "react-icons/ai";
 import { db } from "./lib/firebase";
 import "./App.css";
 
@@ -11,39 +11,6 @@ export default function App() {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [isUploadClosing, setIsUploadClosing] = useState(false);
-
-  const closePopup = () => {
-    setIsUploadClosing(true);
-    setTimeout(() => {
-      setShowPopup(false);
-      setIsUploadClosing(false);
-    }, 300); // Match animation duration
-  };
-
-  const handleDragStart = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  
-    const files = e.dataTransfer.files;
-    if (files.length) {
-      console.log("Files dropped:", files);
-    }
-  };
 
   const handleTakePhoto = () => {
     const videoElement = document.createElement('video');
@@ -63,6 +30,7 @@ export default function App() {
     fileInput.accept = 'image/*';
     fileInput.click();
   };
+
 
   useEffect(() => {
     const fetchAllCollections = async () => {
@@ -100,8 +68,6 @@ export default function App() {
     fetchAllCollections();
   }, []);
 
-  const filteredItems = items.filter((item) => item.category === selectedCategory);
-
   return (
     <div className="wardrobe-container">
       <header className="wardrobe-header">My Wardrobe</header>
@@ -119,21 +85,23 @@ export default function App() {
           ))}
         </div>
 
-        {filteredItems.length > 0 ? (
+        {items.length > 0 ? (
           <div className="item-grid">
-            {filteredItems.map((item) => (
-              <div key={item.id} className="item-card">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="item-image" />
-                ) : (
-                  <div className="placeholder">No Image</div>
-                )}
-                <div className="item-info">
-                  <h3>{item.name}</h3>
-                  <p>{item.description}</p>
+            {items
+              .filter((item) => item.category === selectedCategory)
+              .map((item) => (
+                <div key={item.id} className="item-card">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="item-image" />
+                  ) : (
+                    <div className="placeholder">No Image</div>
+                  )}
+                  <div className="item-info">
+                    <h3>{item.name}</h3>
+                    <p>{item.description}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         ) : (
           <div className="empty-category">
@@ -150,24 +118,24 @@ export default function App() {
       </div>
 
       {showPopup && (
-        <div className={`popup-overlay ${isUploadClosing ? "closing" : ""}`} onClick={closePopup}>
-          <div className={`popup-content ${isUploadClosing ? "closing" : ""}`} onClick={(e) => e.stopPropagation()}>
-            <div
-              className={`upload-box ${isDragging ? "dragging" : ""}`}
-              onDragEnter={handleDragStart}
-              onDragOver={handleDragStart}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <AiOutlineCloudUpload className="upload-icon" />
-              <p className="upload-text">Drag & drop your files here or</p>
-              <button className="upload-btn">Choose files</button>
-            </div>
+        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Add a Photo</h2>
+            <button className="popup-btn" onClick={handleTakePhoto}>Take a Photo</button>
+            <button className="popup-btn" onClick={handleUploadPhoto}>Upload a Photo</button>
+            <button className="close-btn" onClick={() => setShowPopup(false)}>Close</button>
+          </div>
+        </div>
+      )}
 
-            {/* Take Photo Button */}
-            <button className="take-photo-btn" onClick={handleTakePhoto}>
-              <AiOutlineCamera className="camera-icon" /> Take a Photo
-            </button>
+      {/* Camera Popup */}
+      {showCameraPopup && (
+        <div className="popup-overlay" onClick={() => setShowCameraPopup(false)}>
+          <div className="camera-popup">
+            <video ref={videoRef} className="camera-preview" autoPlay></video>
+            <canvas ref={canvasRef} width="300" height="200" style={{ display: "none" }}></canvas>
+            <button className="popup-btn" onClick={handleCapturePhoto}>Capture Photo</button>
+            <button className="close-btn" onClick={() => setShowCameraPopup(false)}>Close</button>
           </div>
         </div>
       )}
