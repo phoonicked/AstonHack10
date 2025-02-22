@@ -18,7 +18,26 @@ const items = [
 
 export default function App() {
   const [selectedCategory, setSelectedCategory] = useState(categories[0]);
+  const [showPopup, setShowPopup] = useState(false);
 
+  const handleTakePhoto = () => {
+    const videoElement = document.createElement('video');
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then((stream) => {
+        videoElement.srcObject = stream;
+        videoElement.play();
+      })
+      .catch((error) => {
+        alert('Error accessing camera: ' + error.message);
+      });
+  };
+
+  const handleUploadPhoto = () => {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.click();
+  };
   const filteredItems = items.filter((item) => item.category === selectedCategory);
 
   return (
@@ -56,9 +75,20 @@ export default function App() {
       </div>
       <div className="bottom-navbar">
         <button className="nav-btn"><AiFillHome size={30} /></button>
-        <button className="nav-btn"><AiOutlinePlus size={30} /></button>
+        <button className="nav-btn" onClick={() => setShowPopup(true)}><AiOutlinePlus size={30} /></button>
         <button className="nav-btn"><AiOutlineUser size={30} /></button>
       </div>
+
+      {showPopup && (
+        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
+          <div className="popup-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Add a Photo</h2>
+            <button className="popup-btn" onClick={handleTakePhoto}>Take a Photo</button>
+            <button className="popup-btn" onClick={handleUploadPhoto}>Upload a Photo</button>
+            <button className="close-btn" onClick={() => setShowPopup(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
